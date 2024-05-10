@@ -1,0 +1,204 @@
+/** Includes the Servo Library to control
+the servo motor. **/
+#include <Servo.h> 
+/** Includes LCD Library for interfacing
+with the LCD display. **/
+#include<LiquidCrystal.h>
+
+// Creates a servo object to control the servo motor.
+Servo myServo;
+// Initializes the LCD object.
+LiquidCrystal lcd(7, 6, 5, 4, 3, 2);
+// Pin connected to the trig pin of the Ultra-Sonic Sensor.
+const int trigPin = 10;
+// Pin connected to the echo pin of the Ultra-Sonic Sensor.
+const int echoPin = 11;
+// Pin connected to the buzzer.
+const int buzzer = 12;
+// Pin connected to the red LED Light.
+const int ledPin1 = 14;
+// Pin connected to the green LED Light.
+const int ledPin2 = 15;
+// Variables for the duration and the distance
+long duration;
+int distance;
+// Threshold distance in centimeters.
+float DistanceSec;
+
+// Function Set-Up
+void setup() {
+  // Starts serial communication at 9600 bps.
+  Serial.begin(9600);
+  // Starts the LCD display. (16 columns, 2 rows)
+  lcd.begin(16,2);
+  // Attach Servo Motor to pin 9.
+  myServo.attach(9);
+  // Sets trig pin as an Output.
+  pinMode(trigPin, OUTPUT);
+  // Sets echo pin as an Input.
+  pinMode(echoPin, INPUT);
+  // Sets buzzer pin as an Output.
+  pinMode(buzzer, OUTPUT);
+  // Sets the red LED light as an Output.
+  pinMode(ledPin1, OUTPUT);
+  // Sets the green LED light as an Output.
+  pinMode(ledPin2, OUTPUT);
+  DistanceSec=20;
+}
+
+void loop() {
+  // This section rotates the servo motor from 15 to 165 degrees
+  for(int i = 15; i <= 165 ; i++ ) {  
+  // Moves the servo to position i degrees.
+  myServo.write(i);
+  // Short delay to allow the servo to reach position.
+  delay(5);
+  // Calls function to calculate distance.
+  distance = calculateDistance();
+  // Serial outputs for data visualization of angle and distance.
+  Serial.print(i);
+  Serial.print(",");
+  Serial.print(distance);
+  Serial.print(".");
+
+ // Conditional logic to handle different distance thresholds.
+ if (distance <= DistanceSec) {
+	if (distance <= DistanceSec/2) {
+      	// Send 1kHz sound.
+		tone(buzzer, 10);
+		digitalWrite(ledPin1, LOW);
+		digitalWrite(ledPin2, HIGH);
+		delay(700);
+      	// Stops sound.
+		noTone(buzzer);
+		lcd.setCursor(0,0);
+		lcd.print("Distance: ");
+		lcd.print(distance);
+		lcd.print(" cm ");
+		delay(10);
+		lcd.setCursor(0,1);
+		lcd.print("Angle : ");
+		lcd.print(i);
+		lcd.print(" deg ");
+		delay(2000);
+    }
+		else {
+      digitalWrite(buzzer, HIGH);
+      digitalWrite(ledPin2, LOW);
+      digitalWrite(ledPin1, HIGH);
+      delay(100);
+      digitalWrite(buzzer, LOW);
+      lcd.setCursor(0,0); // positionner le cursor a 0,0
+      lcd.print("Distance: "); // Printe "Distance" sur LCD
+      lcd.print(distance); // Printe la valeur Obtenue sur LCD
+      lcd.print(" cm "); // Printe l'unité sur LCD
+      delay(10);
+      lcd.setCursor(0,1);
+      lcd.print("Angle : ");
+      lcd.print(i);
+      lcd.print(" deg ");
+      delay(2000);
+      }
+  }
+  else {
+  digitalWrite(buzzer, LOW);
+  digitalWrite(ledPin1, LOW);
+  digitalWrite(ledPin2, LOW);
+  }
+
+  lcd.setCursor(0,0);
+  lcd.print("Distance: ");
+  lcd.print(distance);
+  lcd.print(" cm ");
+  delay(10);
+  lcd.setCursor(0,1);
+  lcd.print("Angle : ");
+  lcd.print(i);
+  lcd.print(" deg ");
+  delay(80);
+  }
+
+
+  // Repeats the previous lines from 165 to 15 degrees
+  for(int i = 165; i > 15; i--) {  
+  myServo.write(i);
+  delay(5);
+  distance = calculateDistance();
+  Serial.print(i);
+  Serial.print(",");
+  Serial.print(distance);
+  Serial.print(".");
+
+ if (distance <= DistanceSec) {
+
+	if (distance <= DistanceSec/2) {
+		tone(buzzer, 10); 
+		digitalWrite(ledPin1, LOW);
+		digitalWrite(ledPin2, HIGH);
+		delay(700);
+		noTone(buzzer);
+		lcd.setCursor(0,0);
+		lcd.print("Distance: ");
+		lcd.print(distance);
+		lcd.print(" cm ");
+		delay(10);
+		lcd.setCursor(0,1);
+		lcd.print("Angle : ");
+		lcd.print(i);
+		lcd.print(" deg ");
+		delay(2000);
+    }
+		else {
+      digitalWrite(buzzer, HIGH);
+      digitalWrite(ledPin2, LOW);
+      digitalWrite(ledPin1, HIGH);
+      delay(100);
+      digitalWrite(buzzer, LOW);
+      lcd.setCursor(0,0);
+      lcd.print("Distance: ");
+      lcd.print(distance);
+      lcd.print(" cm ");
+      delay(10);
+      lcd.setCursor(0,1);
+      lcd.print("Angle : ");
+      lcd.print(i);
+      lcd.print(" deg ");
+      delay(2000);
+    }
+  }
+  else {
+  digitalWrite(buzzer, LOW);
+  digitalWrite(ledPin1, LOW);
+  digitalWrite(ledPin2, LOW);
+  }
+
+  lcd.setCursor(0,0);
+  lcd.print("Distance: ");
+  lcd.print(distance);
+  lcd.print(" cm ");
+  delay(10);
+  lcd.setCursor(0,1);
+  lcd.print("Angle : ");
+  lcd.print(i);
+  lcd.print(" deg ");
+  delay(80);
+  }
+}
+
+// Function for calculating the distance measured by the Ultrasonic sensor
+int calculateDistance(){ 
+
+  digitalWrite(trigPin, LOW); 
+  // Ensures a clean signal.
+  delayMicroseconds(2);
+  // Sets the trigPin on HIGH state for 10 micro seconds
+  digitalWrite(trigPin, HIGH); 
+  delayMicroseconds(10);
+  digitalWrite(trigPin, LOW);
+  // Measures the length of the incoming pulse.
+  duration = pulseIn(echoPin, HIGH);
+  // Calculates the distance.
+  distance= duration*0.034/2;
+  // Returns the computed distance.
+  return distance;
+}
